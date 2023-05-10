@@ -9,6 +9,7 @@ import com.example.utils.ValidateCodeUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpSession;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created with IntelliJ IDEA.
@@ -33,7 +35,10 @@ import java.util.Map;
 public class UserController {
 
     @Autowired
-    public UserService userService;
+    private UserService userService;
+
+    @Autowired
+    private RedisTemplate redisTemplate;
 
     @PostMapping("/sendMsg")
     public R<String> sendMsg(@RequestBody User user, HttpSession session){
@@ -51,7 +56,9 @@ public class UserController {
 //          SMSUtils.sendMessage("瑞吉外卖", "", phone, code);
 
             //保存验证码
-            session.setAttribute(phone, code);
+            //session.setAttribute(phone, code);
+            //验证码缓存至redis
+            redisTemplate.opsForValue().set(phone, code, 5, TimeUnit.MINUTES);
 
             R.success("成功");
         }
@@ -70,7 +77,9 @@ public class UserController {
         String code =map.get("code").toString();
 
         //获取session中的验证码
-        Object sessionCode = session.getAttribute(phone);
+//        Object sessionCode = session.getAttribute(phone);
+        //获取redis中的验证码
+        Object sessionCode = redisTemplate.opsForValue().get(phone);
 
         //判断验证码是否正确
         if(sessionCode!=null && sessionCode.equals(code)){
@@ -90,7 +99,8 @@ public class UserController {
             }
 
             session.setAttribute("user", user.getId());
-
+            //删除验证码
+            redisTemplate.delete(phone);
             return R.success(user);
         }
 
