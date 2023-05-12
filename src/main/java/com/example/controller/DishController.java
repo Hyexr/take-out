@@ -12,6 +12,8 @@ import com.example.service.DishService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
@@ -53,6 +55,7 @@ public class DishController {
      * @return
      */
     @PostMapping
+    @CacheEvict(value = "dishCache",key = "#dishDto.categoryId+'_1'")
     public R<String> save(@RequestBody DishDto dishDto){
         log.info(dishDto.toString());
         dishService.saveWithFlavor(dishDto);
@@ -120,15 +123,16 @@ public class DishController {
      * 修改
      */
     @PutMapping
+    @CacheEvict(value = "dishCache",key = "#dishDto.categoryId+'_1'")
     public R<String> update(@RequestBody DishDto dishDto){
         log.info(dishDto.toString());
 
         dishService.updateWithFlavor(dishDto);
 
         //清理缓存
-//        Set keys = redisTemplate.keys("dish_*");
-        String keys = "dish_" + dishDto.getCategoryId() + "_1";
-        redisTemplate.delete(keys);
+////        Set keys = redisTemplate.keys("dish_*");
+//        String keys = "dish_" + dishDto.getCategoryId() + "_1";
+//        redisTemplate.delete(keys);
 
         return R.success("成功");
     }
@@ -152,17 +156,18 @@ public class DishController {
 //    }
 
     @GetMapping("/list")
+    @Cacheable(value = "dishCache",key = "#dish.categoryId+'_'+#dish.status")
     public R<List<DishDto>> list(Dish dish){
 
         List<DishDto> dishDtoList = null;
-        //动态构造key
-        String key = "dish_" + dish.getCategoryId() + "_" + dish.getStatus();
-
-        //redis获取数据
-        dishDtoList = (List<DishDto>) redisTemplate.opsForValue().get(key);
-        if (dishDtoList != null){
-            return R.success(dishDtoList);
-        }
+//        //动态构造key
+//        String key = "dish_" + dish.getCategoryId() + "_" + dish.getStatus();
+//
+//        //redis获取数据
+//        dishDtoList = (List<DishDto>) redisTemplate.opsForValue().get(key);
+//        if (dishDtoList != null){
+//            return R.success(dishDtoList);
+//        }
 
         //查询条件
         LambdaQueryWrapper<Dish> queryWrapper = new LambdaQueryWrapper<>();
@@ -192,7 +197,7 @@ public class DishController {
         }).toList();
 
         //redis存储数据
-        redisTemplate.opsForValue().set(key,dishDtoList,60, TimeUnit.MINUTES);
+//        redisTemplate.opsForValue().set(key,dishDtoList,60, TimeUnit.MINUTES);
 
         return R.success(dishDtoList);
     }

@@ -14,6 +14,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -44,13 +45,15 @@ public class SetmealController {
     @Autowired
     private SetmealDishService setmealDishService;
 
+    @Autowired
+    private RedisTemplate redisTemplate;
     /**
      * 保存
      * @param setmealDto
      * @return
      */
     @PostMapping
-    @CacheEvict(value = "setmealCache",allEntries = true)
+    @CacheEvict(value = "setmealCache",key = "#setmealDto.categoryId+'_'+#setmealDto.status")
     public R<String> save(@RequestBody SetmealDto setmealDto){
 
         log.info(setmealDto.toString());
@@ -98,10 +101,14 @@ public class SetmealController {
      * 删除
      */
     @DeleteMapping
-    @CacheEvict(value = "setmealCache",allEntries = true)
+//    @CacheEvict(value = "setmealCache",allEntries = true)
     public R<String> delete(@RequestParam List<Long> ids){
 
         setmealService.removeWithDish(ids);
+        for(Long id:ids){
+            String key = id+"_*";
+            redisTemplate.delete(key);
+        }
 
         return R.success("删除成功");
     }
