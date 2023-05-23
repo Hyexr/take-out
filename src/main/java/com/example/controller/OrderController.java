@@ -48,6 +48,16 @@ public class OrderController {
         return R.success("提交成功");
     }
 
+    /**
+     *
+     * @param page
+     * @param pageSize
+     * @param number
+     * @param beginTime
+     * @param endTime
+     * 订单分页查询
+     * @return
+     */
     @GetMapping("/page")
     public R<Page> page(int page, int pageSize, Long number, String beginTime, String endTime){
         //分页构造器
