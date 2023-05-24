@@ -164,4 +164,13 @@ public class SetmealController {
 
         return R.success(setmealDto);
     }
+
+    @PutMapping
+    @CacheEvict(value = "setmealCache", allEntries = true)
+    public R<SetmealDto> update(@RequestBody SetmealDto setmealDto){
+
+        setmealService.updateWithDish(setmealDto);
+
+        return R.success(setmealDto);
+    }
 }

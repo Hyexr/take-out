@@ -74,4 +74,22 @@ public class SetmealServiceImpl extends ServiceImpl<SetmealMapper, Setmeal> impl
         setmealDishService.remove(queryWrapper1);
     }
 
+    @Override
+    @Transactional
+    public void updateWithDish(SetmealDto setmealDto) {
+
+        LambdaQueryWrapper<SetmealDish> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(SetmealDish::getSetmealId, setmealDto.getId());
+        setmealDishService.remove(queryWrapper);
+
+        List<SetmealDish> setmealDishList = setmealDto.getSetmealDishes();
+        setmealDishList.stream().map((setmealDish) -> {
+            setmealDish.setSetmealId(setmealDto.getId());
+            return setmealDish;
+        }).collect(Collectors.toList());
+
+        this.updateById(setmealDto);
+        setmealDishService.saveBatch(setmealDishList);
+    }
+
 }
