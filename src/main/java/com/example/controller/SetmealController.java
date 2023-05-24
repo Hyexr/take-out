@@ -108,7 +108,7 @@ public class SetmealController {
 
         setmealService.removeWithDish(ids);
         for(Long id:ids){
-            String key = id+"_*";
+            String key = "setmealCache:"+ id +"_*";
             redisTemplate.delete(key);
         }
 
