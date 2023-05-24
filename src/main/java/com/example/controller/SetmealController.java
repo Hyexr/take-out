@@ -1,11 +1,13 @@
 package com.example.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.common.R;
 import com.example.dto.SetmealDto;
 import com.example.entity.Category;
 import com.example.entity.Setmeal;
+import com.example.entity.SetmealDish;
 import com.example.service.CategoryService;
 import com.example.service.SetmealDishService;
 import com.example.service.SetmealService;
@@ -128,5 +130,38 @@ public class SetmealController {
         List<Setmeal> list = setmealService.list(queryWrapper);
 
         return R.success(list);
+    }
+
+    /**
+     * 批量修改启停售
+     * @param status
+     * @param ids
+     * @return
+     */
+    @PostMapping("/status/{status}")
+    @CacheEvict(value = "setmealCache", allEntries = true)
+    public R<String> status(@PathVariable Integer status, @RequestParam List<Long> ids){
+        LambdaUpdateWrapper<Setmeal> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+        lambdaUpdateWrapper.in(ids!=null, Setmeal::getId, ids);
+        lambdaUpdateWrapper.set(Setmeal::getStatus, status);
+        setmealService.update(lambdaUpdateWrapper);
+
+        return R.success("成功");
+    }
+
+    @GetMapping("/{id}")
+    public R<SetmealDto> get(@PathVariable Long id){
+
+        Setmeal setmeal = setmealService.getById(id);
+        SetmealDto setmealDto = new SetmealDto();
+        BeanUtils.copyProperties(setmeal, setmealDto);
+
+        LambdaQueryWrapper<SetmealDish> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.eq(SetmealDish::getSetmealId, id);
+        List<SetmealDish> list = setmealDishService.list(lambdaQueryWrapper);
+
+        setmealDto.setSetmealDishes(list);
+
+        return R.success(setmealDto);
     }
 }

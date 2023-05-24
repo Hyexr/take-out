@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.example.dto.DishDto;
 import com.example.entity.Dish;
 
+import java.util.List;
+
 /**
  * Created with IntelliJ IDEA.
  *
@@ -21,4 +23,7 @@ public interface DishService extends IService<Dish> {
     public DishDto getIdWithFlavor(Long id);
 
     public void updateWithFlavor(DishDto dishDto);
+
+    public void removeWithFlavor(List<Long> ids);
+
 }

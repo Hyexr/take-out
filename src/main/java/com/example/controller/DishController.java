@@ -203,7 +203,14 @@ public class DishController {
         return R.success(dishDtoList);
     }
 
+    /**
+     * 批量修改启停售
+     * @param status
+     * @param ids
+     * @return
+     */
     @PostMapping("/status/{status}")
+    @CacheEvict(value = "dishCache", allEntries = true)
     public R<String> status(@PathVariable Integer status, @RequestParam List<Long> ids) {
 
         LambdaUpdateWrapper<Dish> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
@@ -213,7 +220,16 @@ public class DishController {
         return R.success("成功");
     }
 
-
+    /**
+     * 批量删除
+     * @param ids
+     * @return
+     */
+    @DeleteMapping
+    public R<String> delete(@RequestParam List<Long> ids){
+        dishService.removeWithFlavor(ids);
+        return R.success("成功");
+    }
 
 
 }
