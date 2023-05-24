@@ -4,11 +4,14 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.common.R;
+import com.example.dto.DishDto;
 import com.example.dto.SetmealDto;
 import com.example.entity.Category;
+import com.example.entity.Dish;
 import com.example.entity.Setmeal;
 import com.example.entity.SetmealDish;
 import com.example.service.CategoryService;
+import com.example.service.DishService;
 import com.example.service.SetmealDishService;
 import com.example.service.SetmealService;
 import lombok.extern.slf4j.Slf4j;
@@ -46,6 +49,9 @@ public class SetmealController {
 
     @Autowired
     private SetmealDishService setmealDishService;
+
+    @Autowired
+    private DishService dishService;
 
     @Autowired
     private RedisTemplate redisTemplate;
@@ -149,6 +155,11 @@ public class SetmealController {
         return R.success("成功");
     }
 
+    /**
+     * 根据id查询套餐
+     * @param id
+     * @return
+     */
     @GetMapping("/{id}")
     public R<SetmealDto> get(@PathVariable Long id){
 
@@ -165,6 +176,11 @@ public class SetmealController {
         return R.success(setmealDto);
     }
 
+    /**
+     * 修改
+     * @param setmealDto
+     * @return
+     */
     @PutMapping
     @CacheEvict(value = "setmealCache", allEntries = true)
     public R<SetmealDto> update(@RequestBody SetmealDto setmealDto){
@@ -172,5 +188,24 @@ public class SetmealController {
         setmealService.updateWithDish(setmealDto);
 
         return R.success(setmealDto);
+    }
+
+    @GetMapping("/dish/{id}")
+    public R<List<DishDto>> getDish(@PathVariable Long id){
+
+        LambdaQueryWrapper<SetmealDish> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.eq(SetmealDish::getSetmealId, id);
+        List<SetmealDish> list = setmealDishService.list(lambdaQueryWrapper);
+
+        List<DishDto> dishDtoList = list.stream().map(setmealDish -> {
+            DishDto dishDto = new DishDto();
+            BeanUtils.copyProperties(setmealDish, dishDto);
+            Dish dish = dishService.getById(setmealDish.getDishId());
+
+            BeanUtils.copyProperties(dish, dishDto);
+            return dishDto;
+        }).toList();
+
+        return R.success(dishDtoList);
     }
 }

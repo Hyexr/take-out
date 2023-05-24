@@ -2,6 +2,7 @@ package com.example.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.example.common.BaseContext;
 import com.example.common.R;
 import com.example.dto.OrdersDto;
 import com.example.entity.OrderDetail;
@@ -89,4 +90,43 @@ public class OrderController {
 
         return R.success(ordersDtoPage);
     }
+
+    /**
+     *
+     * @param page
+     * @param pageSize
+     * @return
+     * 用户订单分页查询
+     */
+    @GetMapping("/userPage")
+    public R<Page> userPage(int page, int pageSize){
+        Long userId = BaseContext.getCurrentId();
+        //分页构造器
+        Page<Orders> pageInfo = new Page<>(page, pageSize);
+        Page<OrdersDto> ordersDtoPage = new Page<>();
+        //条件构造器
+        LambdaQueryWrapper<Orders> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(Orders::getUserId, userId);
+        queryWrapper.orderByDesc(Orders::getOrderTime);
+        //查询
+        orderService.page(pageInfo, queryWrapper);
+        BeanUtils.copyProperties(pageInfo, ordersDtoPage, "record");
+
+        List<OrdersDto> list = pageInfo.getRecords().stream().map((item) -> {
+            OrdersDto ordersDto = new OrdersDto();
+            Long orderId = item.getId();
+            LambdaQueryWrapper<OrderDetail> wrapper = new LambdaQueryWrapper<>();
+            wrapper.eq(OrderDetail::getOrderId, orderId);
+            List<OrderDetail> details = orderDetailService.list(wrapper);
+            BeanUtils.copyProperties(item, ordersDto);
+            ordersDto.setOrderDetails(details);
+            return ordersDto;
+        }).toList();
+
+        ordersDtoPage.setRecords(list);
+
+        return R.success(ordersDtoPage);
+    }
+
+
 }

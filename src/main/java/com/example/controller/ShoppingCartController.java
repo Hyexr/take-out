@@ -96,7 +96,7 @@ public class ShoppingCartController {
      *
      * @return
      */
-    @DeleteMapping("")
+    @DeleteMapping
     public R<String> clean(){
 
         Long curId = BaseContext.getCurrentId();
@@ -107,4 +107,9 @@ public class ShoppingCartController {
         return R.success("清空成功");
     }
 
+    @PostMapping("/sub")
+    public R<ShoppingCart> sub(@RequestBody ShoppingCart shoppingCart){
+        Long dishId = shoppingCart.getDishId();
+        Long setmealId = shoppingCart.getSetmealId();
+    }
 }
