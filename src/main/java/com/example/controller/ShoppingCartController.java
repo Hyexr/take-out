@@ -97,7 +97,7 @@ public class ShoppingCartController {
      * @return
      *
      */
-    @DeleteMapping
+    @DeleteMapping("/clean")
     public R<String> clean(){
 
         Long curId = BaseContext.getCurrentId();
