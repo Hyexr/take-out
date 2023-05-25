@@ -226,6 +226,7 @@ public class DishController {
      * @return
      */
     @DeleteMapping
+    @CacheEvict(value = "dishCache", allEntries = true)
     public R<String> delete(@RequestParam List<Long> ids){
         dishService.removeWithFlavor(ids);
         return R.success("成功");
