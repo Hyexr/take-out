@@ -95,6 +95,7 @@ public class ShoppingCartController {
      * 清空购物车
      *
      * @return
+     *
      */
     @DeleteMapping
     public R<String> clean(){
@@ -111,5 +112,26 @@ public class ShoppingCartController {
     public R<ShoppingCart> sub(@RequestBody ShoppingCart shoppingCart){
         Long dishId = shoppingCart.getDishId();
         Long setmealId = shoppingCart.getSetmealId();
+
+        LambdaQueryWrapper<ShoppingCart> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(ShoppingCart::getUserId,BaseContext.getCurrentId());
+        if(dishId != null){
+            queryWrapper.eq(ShoppingCart::getDishId,dishId);
+        }else{
+            queryWrapper.eq(ShoppingCart::getSetmealId,setmealId);
+        }
+        ShoppingCart cart = shoppingCartService.getOne(queryWrapper);
+
+        if(cart == null){
+            return R.error("购物车中不存在该商品");
+        }
+
+        cart.setNumber(cart.getNumber() - 1);
+        if(cart.getNumber() == 0){
+            shoppingCartService.removeById(cart.getId());
+        }else{
+            shoppingCartService.updateById(cart);
+        }
+        return R.success(cart);
     }
 }
